@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MasterChef Challenge</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: url('https://images.unsplash.com/photo-1583778176476-4a8b02a64c01?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') center/cover;
+    }
+    
+    .station {
+      position: absolute;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    }
+    
+    #stove {
+      width: 180px;
+      height: 100px;
+      background: rgba(60, 60, 60, 0.8);
+      bottom: 150px;
+      left: 200px;
+    }
+    
+    #cutting-board {
+      width: 200px;
+      height: 120px;
+      background: url('https://images.unsplash.com/photo-1519682337058-a94d519337bc?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80') center/cover;
+      bottom: 160px;
+      right: 250px;
+    }
+    
+    #plating-area {
+      width: 150px;
+      height: 150px;
+      background: white;
+      border-radius: 50%;
+      bottom: 180px;
+      right: 100px;
+      border: 3px solid #f1c40f;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+    
+    .ingredient {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background-size: cover;
+      background-position: center;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.2s;
+      z-index: 10;
+    }
+    
+    .ingredient:active {
+      cursor: grabbing;
+      transform: scale(1.1);
+    }
+    
+    #knife {
+      position: absolute;
+      width: 80px;
+      height: 15px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 15"><path d="M10 7 L70 7 L65 3 L70 0 L10 0 Z" fill="silver"/></svg>') no-repeat;
+      right: 300px;
+      bottom: 220px;
+      z-index: 20;
+      transform-origin: 10% 50%;
+    }
+    
+    #timer {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 20px;
+    }
+    
+    #recipe-card {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 250px;
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    #recipe-card h3 {
+      color: #e74c3c;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #f1c40f;
+      padding-bottom: 5px;
+    }
+    
+    .recipe-step {
+      margin: 8px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .recipe-step.completed::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #27ae60;
+    }
+    
+    #heat-control {
+      position: absolute;
+      bottom: 260px;
+      left: 250px;
+      width: 60px;
+      height: 60px;
+      background: #e74c3c;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      z-index: 15;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    
+    #heat-level {
+      position: absolute;
+      bottom: 330px;
+      left: 245px;
+      width: 70px;
+      height: 150px;
+      background: linear-gradient(to top, #27ae60, #f1c40f, #e74c3c);
+      border-radius: 35px;
+      overflow: hidden;
+      display: none;
+    }
+    
+    #heat-indicator {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 30%;
+      background: rgba(0,0,0,0.5);
+      transition: height 0.3s;
+    }
+    
+    #sizzle-effect {
+      position: absolute;
+      width: 100px;
+      height: 30px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"><path d="M10,15 Q20,5 30,15 Q40,25 50,15 Q60,5 70,15 Q80,25 90,15" stroke="rgba(255,165,0,0.7)" fill="none" stroke-width="2"/></svg>') repeat-x;
+      bottom: 230px;
+      left: 200px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    #score-display {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 18px;
+    }
+    
+    #feedback {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 18px;
+    }
+    
+    #completion-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 100;
+    }
+    
+    #completion-screen h2 {
+      font-size: 36px;
+      color: #f1c40f;
+      margin-bottom: 20px;
+    }
+    
+    .rating {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    
+    .star {
+      color: #f1c40f;
+      font-size: 30px;
+      margin: 0 5px;
+    }
+    
+    #final-score {
+      font-size: 24px;
+      margin: 10px 0;
+    }
+    
+    #start-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 100;
+    }
+    
+    #start-screen h1 {
+      font-size: 48px;
+      color: #f1c40f;
+      margin-bottom: 20px;
+    }
+    
+    #start-screen p {
+      max-width: 500px;
+      text-align: center;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    
+    .btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 50px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.3s;
+    }
+    
+    .btn:hover {
+      background: #c0392b;
+      transform: scale(1.05);
+    }
+    
+    .chopping-animation {
+      animation: chop 0.3s;
+    }
+    
+    @keyframes chop {
+      0% { transform: rotate(0); }
+      50% { transform: rotate(-30deg); }
+      100% { transform: rotate(0); }
+    }
+    
+    .sizzle-animation {
+      animation: sizzle 0.5s infinite alternate;
+    }
+    
+    @keyframes sizzle {
+      from { transform: translateY(0); }
+      to { transform: translateY(-5px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="start-screen">
+    <h1>MasterChef Challenge</h1>
+    <p>Test your culinary skills in this professional kitchen simulation. Prepare dishes with perfect timing, precise techniques, and artistic plating under intense time pressure.</p>
+    <button class="btn" id="start-btn">Begin Challenge</button>
+  </div>
+
+  <div id="game-container">
+    <div id="stove" class="station">STOVE</div>
+    <div id="cutting-board" class="station">CUTTING BOARD</div>
+    <div id="plating-area" class="station">PLATING AREA</div>
+    
+    <div id="knife"></div>
+    <div id="heat-control">HEAT</div>
+    <div id="heat-level">
+      <div id="heat-indicator"></div>
+    </div>
+    <div id="sizzle-effect"></div>
+    
+    <div id="onion" class="ingredient"></div>
+    <div id="tomato" class="ingredient"></div>
+    <div id="steak" class="ingredient"></div>
+    
+    <div id="timer">10:00</div>
+    <div id="score-display">Score: 0</div>
+    <div id="feedback">Perfect chop! +20</div>
+    <div id="recipe-card">
+      <h3>Beef Bourguignon</h3>
+      <div class="recipe-step" id="step1">1. Chop onions</div>
+      <div class="recipe-step" id="step2">2. Sear steak</div>
+      <div class="recipe-step" id="step3">3. Deglaze pan</div>
+      <div class="recipe-step" id="step4">4. Simmer sauce</div>
+      <div class="recipe-step" id="step5">5. Plate dish</div>
+    </div>
+  </div>
+
+  <div id="completion-screen">
+    <h2>Challenge Complete!</h2>
+    <div class="rating">
+      <span class="star">★</span>
+      <span class="star">★</span>
+      <span class="star">★</span>
+      <span class="star">★</span>
+      <span class="star">★</span>
+    </div>
+    <div id="final-score">Final Score: 850</div>
+    <button class="btn" id="restart-btn">Try Again</button>
+  </div>
+
+  <script>
+    // Game elements
+    const startScreen = document.getElementById('start-screen');
+    const gameContainer = document.getElementById('game-container');
+    const completionScreen = document.getElementById('completion-screen');
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const timerDisplay = document.getElementById('timer');
+    const scoreDisplay = document.getElementById('score-display');
+    const feedback = document.getElementById('feedback');
+    const heatControl = document.getElementById('heat-control');
+    const heatLevel = document.getElementById('heat-level');
+    const heatIndicator = document.getElementById('heat-indicator');
+    const sizzleEffect = document.getElementById('sizzle-effect');
+    const knife = document.getElementById('knife');
+    const recipeSteps = [
+      document.getElementById('step1'),
+      document.getElementById('step2'),
+      document.getElementById('step3'),
+      document.getElementById('step4'),
+      document.getElementById('step5')
+    ];
+
+    // Ingredients
+    const ingredients = {
+      onion: document.getElementById('onion'),
+      tomato: document.getElementById('tomato'),
+      steak: document.getElementById('steak')
+    };
+
+    // Stations
+    const stations = {
+      stove: document.getElementById('stove'),
+      cuttingBoard: document.getElementById('cutting-board'),
+      platingArea: document.getElementById('plating-area')
+    };
+
+    // Game state
+    let currentStep = 0;
+    let timeLeft = 600; // 10 minutes in seconds
+    let score = 0;
+    let heat = 0; // 0-100
+    let isCooking = false;
+    let cookingProgress = 0;
+    let gameInterval;
+    let cookingInterval;
+    let isDragging = false;
+    let draggedElement = null;
+    let originalPosition = { x: 0, y: 0 };
+    let dishQuality = 5; // Max 5 stars
+
+    // Initialize game
+    function initGame() {
+      // Reset game state
+      currentStep = 0;
+      timeLeft = 600;
+      score = 0;
+      heat = 0;
+      isCooking = false;
+      cookingProgress = 0;
+      dishQuality = 5;
+      
+      // Reset UI
+      timerDisplay.textContent = '10:00';
+      scoreDisplay.textContent = 'Score: 0';
+      feedback.style.opacity = '0';
+      heatLevel.style.display = 'none';
+      heatIndicator.style.height = '30%';
+      sizzleEffect.style.opacity = '0';
+      
+      // Reset recipe steps
+      recipeSteps.forEach(step => {
+        step.classList.remove('completed');
+      });
+      
+      // Position ingredients
+      ingredients.onion.style.left = '50px';
+      ingredients.onion.style.top = '100px';
+      ingredients.onion.style.backgroundImage = 'url(https://images.unsplash.com/photo-1589927986089-35812388d1f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=70&q=80)';
+      
+      ingredients.tomato.style.left = '130px';
+      ingredients.tomato.style.top = '100px';
+      ingredients.tomato.style.backgroundImage = 'url(https://images.unsplash.com/photo-1594282418426-62d3c137488f?ixlib=rb-1.2.1&auto=format&fit=crop&w=70&q=80)';
+      
+      ingredients.steak.style.left = '210px';
+      ingredients.steak.style.top = '100px';
+      ingredients.steak.style.backgroundImage = 'url(https://images.unsplash.com/photo-1558030138-950b560d6fbc?ixlib=rb-1.2.1&auto=format&fit=crop&w=70&q=80)';
+      
+      // Start game loop
+      clearInterval(gameInterval);
+      gameInterval = setInterval(updateGame, 1000);
+      
+      // Set up event listeners
+      setupEventListeners();
+      
+      // Hide screens
+      startScreen.style.display = 'none';
+      completionScreen.style.display = 'none';
+    }
+
+    // Update game state
+    function updateGame() {
+      timeLeft--;
+      updateTimer();
+      
+      if (timeLeft <= 0) {
+        endGame();
+      }
+      
+      // Reduce quality if steps take too long
+      if (timeLeft % 30 === 0 && currentStep < 4) {
+        dishQuality = Math.max(1, dishQuality - 1);
+      }
+      
+      // Update cooking if in progress
+      if (isCooking) {
+        cookingProgress += heat / 20;
+        
+        if (cookingProgress >= 100) {
+          finishCooking();
+        }
+      }
+    }
+
+    // Update timer display
+    function updateTimer() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    // Set up event listeners
+    function setupEventListeners() {
+      // Heat control
+      heatControl.addEventListener('click', toggleHeatControl);
+      heatControl.addEventListener('mouseenter', showHeatLevel);
+      heatControl.addEventListener('mouseleave', hideHeatLevel);
+      
+      // Ingredient dragging
+      Object.values(ingredients).forEach(ing => {
+        ing.addEventListener('mousedown', startDrag);
+        ing.addEventListener('touchstart', startDrag);
+      });
+      
+      // Knife interaction
+      knife.addEventListener('mousedown', useKnife);
+      knife.addEventListener('touchstart', useKnife);
+      
+      // Mouse move for knife positioning
+      document.addEventListener('mousemove', moveKnife);
+      document.addEventListener('touchmove', moveKnife);
+      
+      // End drag
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchend', endDrag);
+    }
+
+    // Heat control functions
+    function toggleHeatControl() {
+      if (heatLevel.style.display === 'block') {
+        heatLevel.style.display = 'none';
+      } else {
+        heatLevel.style.display = 'block';
+      }
+    }
+
+    function showHeatLevel() {
+      heatLevel.style.display = 'block';
+    }
+
+    function hideHeatLevel() {
+      heatLevel.style.display = 'none';
+    }
+
+    // Knife functions
+    function moveKnife(e) {
+      const clientX = e.clientX || e.touches[0].clientX;
+      knife.style.left = `${clientX - 40}px`;
+    }
+
+    function useKnife() {
+      if (currentStep > 1) return; // Only allow chopping for first steps
+      
+      // Animate knife
+      knife.classList.add('chopping-animation');
+      setTimeout(() => {
+        knife.classList.remove('chopping-animation');
+      }, 300);
+      
+      // Check if over cutting board with correct ingredient
+      const knifeRect = knife.getBoundingClientRect();
+      const cuttingBoardRect = stations.cuttingBoard.getBoundingClientRect();
+      
+      if (knifeRect.right > cuttingBoardRect.left && 
+          knifeRect.left < cuttingBoardRect.right &&
+          knifeRect.bottom > cuttingBoardRect.top && 
+          knifeRect.top < cuttingBoardRect.bottom) {
+        
+        // Check ingredients on cutting board
+        Object.values(ingredients).forEach(ing => {
+          const ingRect = ing.getBoundingClientRect();
+          
+          if (ingRect.right > cuttingBoardRect.left && 
+              ingRect.left < cuttingBoardRect.right &&
+              ingRect.bottom > cuttingBoardRect.top && 
+              ingRect.top < cuttingBoardRect.bottom) {
+            
+            if ((currentStep === 0 && ing === ingredients.onion) ||
+                (currentStep === 1 && ing === ingredients.tomato)) {
+              // Chop the ingredient
+              ing.style.backgroundImage = ing.style.backgroundImage.replace('q=80', 'q=60&blur=2');
+              
+              // Add score
+              addScore(20, 'Perfect chop!');
+              
+              // Complete step after delay
+              setTimeout(() => {
+                completeStep();
+              }, 500);
+            }
+          }
+        });
+      }
+    }
+
+    // Drag and drop functions
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      draggedElement = e.target;
+      originalPosition = {
+        x: parseInt(draggedElement.style.left),
+        y: parseInt(draggedElement.style.top)
+      };
+      
+      // Bring to front
+      draggedElement.style.zIndex = '20';
+    }
+
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      
+      // Check if dropped on a station
+      const elementRect = draggedElement.getBoundingClientRect();
+      const elementCenter = {
+        x: elementRect.left + elementRect.width / 2,
+        y: elementRect.top + elementRect.height / 2
+      };
+      
+      // Check stove
+      const stoveRect = stations.stove.getBoundingClientRect();
+      if (elementCenter.x > stoveRect.left && 
+          elementCenter.x < stoveRect.right &&
+          elementCenter.y > stoveRect.top && 
+          elementCenter.y < stoveRect.bottom) {
+        
+        if (currentStep === 2 && draggedElement === ingredients.steak) {
+          startCooking();
+        } else {
+          returnToOriginalPosition();
+        }
+      }
+      // Check plating area
+      else if (elementCenter.x > stations.platingArea.getBoundingClientRect().left && 
+               elementCenter.x < stations.platingArea.getBoundingClientRect().right &&
+               elementCenter.y > stations.platingArea.getBoundingClientRect().top && 
+               elementCenter.y < stations.platingArea.getBoundingClientRect().bottom) {
+        
+        if (currentStep === 4) {
+          completeStep();
+          endGame(true);
+        } else {
+          returnToOriginalPosition();
+        }
+      }
+      else {
+        returnToOriginalPosition();
+      }
+      
+      draggedElement.style.zIndex = '10';
+    }
+
+    function returnToOriginalPosition() {
+      draggedElement.style.left = `${originalPosition.x}px`;
+      draggedElement.style.top = `${originalPosition.y}px`;
+    }
+
+    // Cooking functions
+    function startCooking() {
+      isCooking = true;
+      sizzleEffect.style.opacity = '1';
+      sizzleEffect.classList.add('sizzle-animation');
+      
+      // Start cooking progress
+      cookingProgress = 0;
+      
+      // Add score
+      addScore(15, 'Searing steak!');
+      
+      // Complete step after delay
+      setTimeout(() => {
+        completeStep();
+      }, 1000);
+    }
+
+    function finishCooking() {
+      isCooking = false;
+      sizzleEffect.style.opacity = '0';
+      sizzleEffect.classList.remove('sizzle-animation');
+      
+      // Change steak appearance
+      ing

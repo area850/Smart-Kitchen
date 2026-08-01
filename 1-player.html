@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Kitchen Memory Game</title>
+  <style>
+    /* ===== Base Styles ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #fff3e0, #ffe0b2);
+      height: 100vh;
+      display: flex;
+    }
+
+    /* ===== Score Panel ===== */
+    .score-panel {
+      width: 180px;
+      background: #fff;
+      padding: 20px;
+      border-right: 2px solid #ff9800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .score-panel h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+      color: #e65100;
+    }
+
+    .score-board {
+      display: grid;
+      grid-template-columns: repeat(2, 50px);
+      gap: 10px;
+      margin: 10px 0;
+      min-height: 60px;
+    }
+
+    /* ===== Game Area ===== */
+    .game-area {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .game-board {
+      display: grid;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    /* ===== Card Styles ===== */
+    .card {
+      perspective: 800px;
+      width: 90px;
+      height: 90px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+      position: relative;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      user-select: none;
+    }
+
+    .card-front {
+      background: #ffe0b2;
+      border: 2px solid #ff9800;
+    }
+
+    .card-back {
+      background: #c8e6c9;
+      border: 2px solid #4caf50;
+      transform: rotateY(180deg);
+    }
+
+    .matched-card {
+      animation: flyToScore 1s forwards;
+      z-index: 1000;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    @keyframes flyToScore {
+      to {
+        transform: translateX(-300px) scale(0.7);
+        opacity: 0;
+      }
+    }
+
+    /* ===== Modal Overlays ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #ffffffcc 0%, #ffe0b2aa 100%);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .modal-text {
+      font-size: 36px;
+      color: #d84315;
+      animation: pop 1s ease forwards;
+      text-shadow: 2px 2px 5px #fff;
+      text-align: center;
+      max-width: 80%;
+      margin: 20px;
+    }
+
+    /* ===== Animations ===== */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0); }
+      100% { transform: scale(1.2); }
+    }
+
+    .rocket {
+      font-size: 60px;
+      animation: rocketLaunch 1.5s ease-out forwards;
+    }
+
+    @keyframes rocketLaunch {
+      0% { transform: translateY(100px); opacity: 0; }
+      100% { transform: translateY(-100px); opacity: 1; }
+    }
+
+    /* ===== Game Info ===== */
+    .game-info {
+      font-weight: bold;
+      font-size: 18px;
+      color: #e65100;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    .timer {
+      font-size: 16px;
+      color: #d84315;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    /* ===== Game Over Effects ===== */
+    .broken-heart {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 30px 0;
+    }
+
+    .heart-half {
+      position: absolute;
+      font-size: 60px;
+      animation-duration: 1.5s;
+      animation-fill-mode: forwards;
+    }
+
+    .heart-left {
+      left: 0;
+      animation-name: breakLeft;
+    }
+
+    .heart-right {
+      right: 0;
+      animation-name: breakRight;
+    }
+
+    @keyframes breakLeft {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-100px, 100px) rotate(-45deg); opacity: 0; }
+    }
+
+    @keyframes breakRight {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(100px, 100px) rotate(45deg); opacity: 0; }
+    }
+
+    .heart-piece {
+      position: absolute;
+      font-size: 20px;
+      color: #ff4081;
+      top: -50px;
+      z-index: 10000;
+      animation: fallingPiece linear forwards;
+      pointer-events: none;
+    }
+
+    @keyframes fallingPiece {
+      to {
+        transform: translateY(calc(100vh + 50px)) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Game Layout -->
+  <aside class="score-panel">
+    <div class="game-info" id="levelInfo">Level: Easy</div>
+    <div class="timer" id="timer">Time left: 35s</div>
+    <h3>🥇 Score</h3>
+    <div class="score-board" id="scoreBoard"></div>
+    <p id="scoreText">Score: 0</p>
+  </aside>
+
+  <main class="game-area">
+    <h3>🎮 Play While You Wait</h3>
+    <p>Flip and match the delicious food!</p>
+    <div class="game-board" id="gameBoard"></div>
+  </main>
+
+  <!-- Game Modals -->
+  <div class="modal-overlay" id="celebration">
+    <div class="rocket">🚀</div>
+    <h1 class="modal-text">🎉 You matched all foods! 🎉</h1>
+  </div>
+
+  <div class="modal-overlay" id="levelComplete">
+    <h1 class="modal-text">⭐ Level Complete! Moving to next level... ⭐</h1>
+  </div>
+
+  <div class="modal-overlay" id="timeUp">
+    <h1 class="modal-text">⏰ Time's up! You ran out of time! ⏰</h1>
+  </div>
+
+  <div class="modal-overlay" id="gameOver">
+    <div class="broken-heart">
+      <div class="heart-half heart-left">💔</div>
+      <div class="heart-half heart-right">💔</div>
+    </div>
+    <h1 class="modal-text">Sorry, try again next time!</h1>
+  </div>
+
+  <script>
+    // ===== Game Configuration =====
+    const GAME_CONFIG = {
+      emojis: ['🍕', '🍔', '🍟', '🍣', '🍩', '🍗', '🍦', '🥗'],
+      levels: [
+        { name: "Easy", pairs: 4, cols: 4, time: 20 },
+        { name: "Medium", pairs: 6, cols: 4, time: 40 },
+        { name: "Hard", pairs: 8, cols: 4, time: 60 }
+      ]
+    };
+
+    // ===== Game State =====
+    const gameState = {
+      currentLevel: 0,
+      cards: [],
+      selectedCards: [],
+      matchedCards: [],
+      score: 0,
+      timer: null,
+      timeLeft: 0,
+      hasFailed: false
+    };
+
+    // ===== DOM Elements =====
+    const elements = {
+      levelInfo: document.getElementById('levelInfo'),
+      scoreText: document.getElementById('scoreText'),
+      scoreBoard: document.getElementById('scoreBoard'),
+      gameBoard: document.getElementById('gameBoard'),
+      celebration: document.getElementById('celebration'),
+      levelComplete: document.getElementById('levelComplete'),
+      timeUp: document.getElementById('timeUp'),
+      gameOver: document.getElementById('gameOver'),
+      timerDisplay: document.getElementById('timer')
+    };
+
+    // ===== Game Initialization =====
+    function initializeGame() {
+      const level = GAME_CONFIG.levels[gameState.currentLevel];
+      
+      // Update UI
+      elements.levelInfo.textContent = `Level: ${level.name}`;
+      elements.scoreText.textContent = `Score: ${gameState.score}`;
+      elements.scoreBoard.innerHTML = '';
+      
+      // Prepare cards
+      const emojisForLevel = GAME_CONFIG.emojis.slice(0, level.pairs);
+      gameState.cards = [...emojisForLevel, ...emojisForLevel].sort(() => Math.random() - 0.5);
+      gameState.selectedCards = [];
+      gameState.matchedCards = [];
+      
+      // Setup game board
+      elements.gameBoard.style.gridTemplateColumns = `repeat(${level.cols}, 90px)`;
+      elements.gameBoard.innerHTML = '';
+      
+      // Create cards
+      gameState.cards.forEach((emoji, index) => {
+        elements.gameBoard.appendChild(createCardElement(emoji, index));
+      });
+      
+      startTimer(level.time);
+    }
+
+    // ===== Card Management =====
+    function createCardElement(emoji, index) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.dataset.index = index;
+
+      const innerCard = document.createElement("div");
+      innerCard.className = "card-inner";
+
+      const front = document.createElement("div");
+      front.className = "card-face card-front";
+      front.textContent = "❓";
+
+      const back = document.createElement("div");
+      back.className = "card-face card-back";
+      back.textContent = emoji;
+
+      innerCard.appendChild(front);
+      innerCard.appendChild(back);
+      card.appendChild(innerCard);
+
+      card.addEventListener('click', handleCardClick);
+      return card;
+    }
+
+    function handleCardClick(event) {
+      const card = event.currentTarget;
+      const index = parseInt(card.dataset.index);
+      
+      // Ignore if card is already matched or selected
+      if (gameState.matchedCards.includes(index) || 
+          gameState.selectedCards.length === 2 || 
+          gameState.selectedCards.includes(index)) {
+        return;
+      }
+      
+      // Flip the card
+      card.classList.add("flipped");
+      gameState.selectedCards.push(index);
+      
+      // Check for match when two cards are selected
+      if (gameState.selectedCards.length === 2) {
+        checkForMatch();
+      }
+    }
+
+    function checkForMatch() {
+      const [firstIndex, secondIndex] = gameState.selectedCards;
+      const firstCard = document.querySelector(`[data-index='${firstIndex}']`);
+      const secondCard = document.querySelector(`[data-index='${secondIndex}']`);
+      
+      if (gameState.cards[firstIndex] === gameState.cards[secondIndex]) {
+        // Match found
+        gameState.matchedCards.push(firstIndex, secondIndex);
+        gameState.score++;
+        elements.scoreText.textContent = `Score: ${gameState.score}`;
+        
+        setTimeout(() => {
+          animateMatchedCards(firstCard, gameState.cards[firstIndex]);
+          animateMatchedCards(secondCard, gameState.cards[secondIndex]);
+        }, 500);
+        
+        // Check if all cards are matched
+        if (gameState.matchedCards.length === gameState.cards.length) {
+          handleLevelCompletion();
+        }
+      } else {
+        // No match - flip cards back
+        setTimeout(() => {
+          firstCard.classList.remove("flipped");
+          secondCard.classList.remove("flipped");
+        }, 900);
+      }
+      
+      gameState.selectedCards = [];
+    }
+
+    function animateMatchedCards(cardElement, emoji) {
+      const clone = cardElement.cloneNode(true);
+      const rect = cardElement.getBoundingClientRect();
+      
+      clone.style.position = "absolute";
+      clone.style.top = `${rect.top}px`;
+      clone.style.left = `${rect.left}px`;
+      clone.classList.add("matched-card");
+      
+      document.body.appendChild(clone);
+      
+      setTimeout(() => {
+        document.body.removeChild(clone);
+        addScoreEmoji(emoji);
+      }, 950);
+    }
+
+    function addScoreEmoji(emoji) {
+      const emojiElement = document.createElement("div");
+      emojiElement.style.fontSize = "30px";
+      emojiElement.textContent = emoji;
+      elements.scoreBoard.appendChild(emojiElement);
+    }
+
+    // ===== Timer Functions =====
+    function startTimer(seconds) {
+      clearInterval(gameState.timer);
+      gameState.timeLeft = seconds;
+      updateTimerDisplay();
+      
+      gameState.timer = setInterval(() => {
+        gameState.timeLeft--;
+        updateTimerDisplay();
+        
+        if (gameState.timeLeft <= 0) {
+          clearInterval(gameState.timer);
+          gameState.hasFailed = true;
+          showModal(elements.timeUp);
+          setTimeout(advanceLevel, 3000);
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      elements.timerDisplay.textContent = `Time left: ${gameState.timeLeft}s`;
+    }
+
+    // ===== Level Management =====
+    function handleLevelCompletion() {
+      clearInterval(gameState.timer);
+      
+      setTimeout(() => {
+        if (gameState.currentLevel < GAME_CONFIG.levels.length - 1) {
+          showModal(elements.levelComplete);
+          setTimeout(() => {
+            gameState.currentLevel++;
+            initializeGame();
+          }, 2500);
+        } else {
+          showFinalResult();
+        }
+      }, 1100);
+    }
+
+    function advanceLevel() {
+      if (gameState.currentLevel < GAME_CONFIG.levels.length - 1) {
+        gameState.currentLevel++;
+        initializeGame();
+      } else {
+        showFinalResult();
+      }
+    }
+
+    function showFinalResult() {
+      if (gameState.hasFailed) {
+        showGameOver();
+      } else {
+        showModal(elements.celebration);
+        setTimeout(resetGame, 4000);
+      }
+    }
+
+    function resetGame() {
+      gameState.currentLevel = 0;
+      gameState.hasFailed = false;
+      initializeGame();
+    }
+
+    // ===== Modal Functions =====
+    function showModal(modalElement) {
+      modalElement.style.display = "flex";
+      
+      if (modalElement === elements.gameOver) {
+        createHeartParticles();
+      }
+      
+      setTimeout(() => {
+        modalElement.style.display = "none";
+      }, modalElement === elements.timeUp ? 3000 : 4000);
+    }
+
+    function createHeartParticles() {
+      const pieces = ['❤️', '💔', '💓', '💔', '💔', '❤️', '💔', '💔', '💓', '💔', '💔', '❤️', '💔'];
+      const container = elements.gameOver;
+      
+      for (let i = 0; i < 15; i++) {
+        setTimeout(() => {
+          const piece = document.createElement('div');
+          piece.className = 'heart-piece';
+          piece.innerHTML = pieces[Math.floor(Math.random() * pieces.length)];
+          piece.style.left = `${Math.random() * 100}%`;
+          piece.style.animationDuration = `${Math.random() * 2 + 2}s`;
+          piece.style.fontSize = `${Math.random() * 20 + 15}px`;
+          container.appendChild(piece);
+          
+          setTimeout(() => piece.remove(), 5000);
+        }, i * 200);
+      }
+    }
+
+    // Start the game when page loads
+    window.addEventListener('DOMContentLoaded', initializeGame);
+  </script>
+</body>
+</html>

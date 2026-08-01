@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kitchen Memory Game - 2 Players</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #fff3e0, #ffe0b2);
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    #header {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-bottom: 2px solid #ff9800;
+      position: relative;
+    }
+
+    .player-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 20px;
+      background: white;
+      border-radius: 10px;
+      min-width: 150px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .player-info.active {
+      background: #c8e6c9;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    }
+
+    .player-name {
+      font-weight: bold;
+      color: #e65100;
+      margin-bottom: 5px;
+    }
+
+    .player-score {
+      font-size: 24px;
+      color: #d84315;
+      margin-bottom: 5px;
+    }
+
+    .player-collected {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+      max-width: 150px;
+      margin-top: 10px;
+      padding: 5px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 5px;
+      min-height: 30px;
+      transition: all 0.3s ease;
+    }
+
+    .player-collected span {
+      font-size: 20px;
+    }
+
+    #levelInfo {
+      font-weight: bold;
+      color: #e65100;
+      text-align: center;
+      margin: 5px 0;
+    }
+
+    #gameContainer {
+      display: flex;
+      flex: 1;
+    }
+
+    #gameSection {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h3 {
+      font-size: 24px;
+      color: #e65100;
+      margin: 10px 0;
+    }
+
+    #gameBoard {
+      display: grid;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .card {
+      perspective: 800px;
+      width: 90px;
+      height: 90px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .inner-card {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+      position: relative;
+    }
+
+    .flipped .inner-card {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      user-select: none;
+    }
+
+    .front {
+      background: #ffe0b2;
+      border: 2px solid #ff9800;
+    }
+
+    .back {
+      background: #c8e6c9;
+      border: 2px solid #4caf50;
+      transform: rotateY(180deg);
+    }
+
+    .matched {
+      animation: flyToPlayer 1s forwards;
+      z-index: 1000;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    @keyframes flyToPlayer {
+      to {
+        transform: translate(var(--tx), var(--ty)) scale(0.7);
+        opacity: 0;
+      }
+    }
+
+    #celebration, #levelComplete, #gameOver, #timeUp {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #ffffffcc 0%, #ffe0b2aa 100%);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .win-text {
+      font-size: 36px;
+      color: #d84315;
+      animation: pop 1s ease forwards;
+      text-shadow: 2px 2px 5px #fff;
+      text-align: center;
+      max-width: 80%;
+      margin: 0 10px;
+    }
+
+    .rocket {
+      font-size: 60px;
+      animation: rocketLaunch 1.5s ease-out forwards;
+      margin-bottom: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0); }
+      100% { transform: scale(1.2); }
+    }
+
+    @keyframes rocketLaunch {
+      0% { transform: translateY(100px); opacity: 0; }
+      100% { transform: translateY(-100px); opacity: 1; }
+    }
+
+    #timer {
+      font-size: 16px;
+      color: #d84315;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      border-radius: 50%;
+      animation: fall 5s linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div class="player-info active" id="player1">
+      <div class="player-name">👨‍🍳 Player 1</div>
+      <div class="player-score">0</div>
+      <div class="player-collected" id="player1-collected"></div>
+    </div>
+    <div>
+      <div id="levelInfo">Level: Easy</div>
+      <div id="timer">Time left: 35s</div>
+    </div>
+    <div class="player-info" id="player2">
+      <div class="player-name">👩‍🍳 Player 2</div>
+      <div class="player-score">0</div>
+      <div class="player-collected" id="player2-collected"></div>
+    </div>
+  </div>
+
+  <div id="gameContainer">
+    <div id="gameSection">
+      <h3>🍽️ Kitchen Memory Duel</h3>
+      <p>Take turns matching the delicious food!</p>
+      <div id="gameBoard"></div>
+    </div>
+  </div>
+
+  <div id="celebration">
+    <div class="rocket">🚀</div>
+    <h1 class="win-text" id="winnerText">Player 1 wins!</h1>
+  </div>
+
+  <div id="levelComplete">
+    <h1 class="win-text">⭐ Level Complete! ⭐</h1>
+    <h1 class="win-text" id="nextLevelText">Moving to Medium...</h1>
+  </div>
+
+  <div id="gameOver">
+    <h1 class="win-text">Game Over!</h1>
+    <h1 class="win-text" id="finalScoreText"></h1>
+  </div>
+
+  <div id="timeUp">
+    <h1 class="win-text">⏰ Time's up!</h1>
+    <h1 class="win-text" id="timeUpScoreText"></h1>
+  </div>
+
+<script>
+  const allEmojis = ['🍕','🍔','🍟','🍣','🍩','🍗','🍦','🥗'];
+  const levels = [
+    {name: "Easy", pairs: 4, cols: 4, time: 20},
+    {name: "Medium", pairs: 6, cols: 4, time: 40},
+    {name: "Hard", pairs: 8, cols: 4, time: 55}
+  ];
+
+  let currentLevel = 0;
+  let cards = [];
+  let selected = [];
+  let matched = [];
+  let timerInterval;
+  let timeLeft;
+  let currentPlayer = 1;
+  let scores = [0, 0];
+  let canFlip = true;
+  let player1Matches = [];
+  let player2Matches = [];
+
+  const player1Element = document.getElementById('player1');
+  const player2Element = document.getElementById('player2');
+  const player1Score = player1Element.querySelector('.player-score');
+  const player2Score = player2Element.querySelector('.player-score');
+  const player1Collected = document.getElementById('player1-collected');
+  const player2Collected = document.getElementById('player2-collected');
+  const levelInfo = document.getElementById('levelInfo');
+  const timerDisplay = document.getElementById('timer');
+  const gameBoard = document.getElementById('gameBoard');
+  const celebration = document.getElementById('celebration');
+  const winnerText = document.getElementById('winnerText');
+  const levelComplete = document.getElementById('levelComplete');
+  const nextLevelText = document.getElementById('nextLevelText');
+  const gameOver = document.getElementById('gameOver');
+  const finalScoreText = document.getElementById('finalScoreText');
+  const timeUp = document.getElementById('timeUp');
+  const timeUpScoreText = document.getElementById('timeUpScoreText');
+
+  function createCard(emoji, index) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.index = index;
+
+    const innerCard = document.createElement("div");
+    innerCard.className = "inner-card";
+
+    const front = document.createElement("div");
+    front.className = "front";
+    front.innerText = "❓";
+
+    const back = document.createElement("div");
+    back.className = "back";
+    back.innerText = emoji;
+
+    innerCard.appendChild(front);
+    innerCard.appendChild(back);
+    card.appendChild(innerCard);
+
+    card.onclick = () => {
+      if (!canFlip || matched.includes(index) || selected.length === 2 || selected.includes(index)) return;
+
+      card.classList.add("flipped");
+      selected.push(index);
+
+      if (selected.length === 2) {
+        canFlip = false;
+        const [i1, i2] = selected;
+        if (cards[i1] === cards[i2]) {
+          matched.push(i1, i2);
+          const card1 = document.querySelector(`[data-index='${i1}']`);
+          const card2 = document.querySelector(`[data-index='${i2}']`);
+
+          setTimeout(() => {
+            animateMatch(card1, cards[i1], currentPlayer);
+            animateMatch(card2, cards[i2], currentPlayer);
+          }, 500);
+
+          // Award point to current player
+          scores[currentPlayer - 1]++;
+          if (currentPlayer === 1) {
+            player1Matches.push(cards[i1], cards[i2]);
+          } else {
+            player2Matches.push(cards[i1], cards[i2]);
+          }
+          updateScores();
+
+          if (matched.length === cards.length) {
+            clearInterval(timerInterval);
+            if (currentLevel < levels.length - 1) {
+              showLevelComplete();
+            } else {
+              showWinner();
+            }
+          } else {
+            setTimeout(() => {
+              selected = [];
+              canFlip = true;
+            }, 500);
+          }
+        } else {
+          setTimeout(() => {
+            document.querySelector(`[data-index='${i1}']`).classList.remove("flipped");
+            document.querySelector(`[data-index='${i2}']`).classList.remove("flipped");
+            selected = [];
+            switchPlayer();
+            canFlip = true;
+          }, 1000);
+        }
+      }
+    };
+
+    return card;
+  }
+
+  function animateMatch(cardElement, emoji, player) {
+    const clone = cardElement.cloneNode(true);
+    const rect = cardElement.getBoundingClientRect();
+    clone.style.position = "absolute";
+    clone.style.top = `${rect.top}px`;
+    clone.style.left = `${rect.left}px`;
+    clone.classList.add("matched");
+    
+    // Get target position (player's collected area)
+    const playerElement = player === 1 ? player1Element : player2Element;
+    const playerRect = playerElement.getBoundingClientRect();
+    const targetX = playerRect.left + playerRect.width/2 - rect.left;
+    const targetY = playerRect.top + playerRect.height/2 - rect.top;
+    
+    clone.style.setProperty('--tx', `${targetX}px`);
+    clone.style.setProperty('--ty', `${targetY}px`);
+    
+    document.body.appendChild(clone);
+
+    setTimeout(() => {
+      document.body.removeChild(clone);
+      updateCollectedItems();
+    }, 950);
+  }
+
+  function updateCollectedItems() {
+    player1Collected.innerHTML = player1Matches.map(emoji => 
+      `<span>${emoji}</span>`
+    ).join('');
+    player2Collected.innerHTML = player2Matches.map(emoji => 
+      `<span>${emoji}</span>`
+    ).join('');
+    
+    // Adjust player info height based on collected items
+    const player1Rows = Math.ceil(player1Matches.length / 5);
+    const player2Rows = Math.ceil(player2Matches.length / 5);
+    
+    player1Collected.style.minHeight = `${30 + (player1Rows > 1 ? (player1Rows - 1) * 30 : 0)}px`;
+    player2Collected.style.minHeight = `${30 + (player2Rows > 1 ? (player2Rows - 1) * 30 : 0)}px`;
+  }
+
+  function startTimer(seconds) {
+    clearInterval(timerInterval);
+    timeLeft = seconds;
+    timerDisplay.textContent = `Time left: ${timeLeft}s`;
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerDisplay.textContent = `Time left: ${timeLeft}s`;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        showTimeUp();
+      }
+    }, 1000);
+  }
+
+  function showTimeUp() {
+    timeUp.style.display = "flex";
+    timeUpScoreText.textContent = `Player 1: ${scores[0]} - Player 2: ${scores[1]}`;
+    setTimeout(() => {
+      timeUp.style.display = "none";
+      if (currentLevel < levels.length - 1) {
+        advanceLevel();
+      } else {
+        resetGame();
+      }
+    }, 4000);
+  }
+
+  function showLevelComplete() {
+    levelComplete.style.display = "flex";
+    nextLevelText.textContent = `Moving to ${levels[currentLevel + 1].name}...`;
+    setTimeout(() => {
+      levelComplete.style.display = "none";
+      advanceLevel();
+    }, 3000);
+  }
+
+  function advanceLevel() {
+    currentLevel++;
+    startGame();
+  }
+
+  function switchPlayer() {
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    player1Element.classList.toggle("active");
+    player2Element.classList.toggle("active");
+  }
+
+  function updateScores() {
+    player1Score.textContent = scores[0];
+    player2Score.textContent = scores[1];
+  }
+
+  function startGame() {
+    const level = levels[currentLevel];
+    levelInfo.textContent = `Level: ${level.name}`;
+    
+    // Prepare cards
+    const emojisForLevel = allEmojis.slice(0, level.pairs);
+    cards = [...emojisForLevel, ...emojisForLevel].sort(() => 0.5 - Math.random());
+
+    selected = [];
+    matched = [];
+    canFlip = true;
+    
+    player1Element.classList.add("active");
+    player2Element.classList.remove("active");
+    updateScores();
+
+    // Setup grid
+    gameBoard.style.gridTemplateColumns = `repeat(${level.cols}, 90px)`;
+    gameBoard.innerHTML = "";
+
+    cards.forEach((emoji, index) => {
+      gameBoard.appendChild(createCard(emoji, index));
+    });
+
+    startTimer(level.time);
+  }
+
+  function showWinner() {
+    let winner;
+    if (scores[0] > scores[1]) {
+      winner = "👨‍🍳 Player 1 wins! 🎉";
+    } else if (scores[1] > scores[0]) {
+      winner = "👩‍🍳 Player 2 wins! 🎉";
+    } else {
+      winner = "It's a tie! 🤝";
+    }
+    
+    winnerText.textContent = winner;
+    celebration.style.display = "flex";
+    createConfetti();
+    
+    setTimeout(() => {
+      celebration.style.display = "none";
+      resetGame();
+    }, 5000);
+  }
+
+  function createConfetti() {
+    const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', 
+                   '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', 
+                   '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+    
+    for (let i = 0; i < 100; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = `${Math.random() * 100}vw`;
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.width = `${Math.random() * 10 + 5}px`;
+      confetti.style.height = confetti.style.width;
+      confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+      document.body.appendChild(confetti);
+      
+      setTimeout(() => {
+        confetti.remove();
+      }, 5000);
+    }
+  }
+
+  function resetGame() {
+    currentLevel = 0;
+    scores = [0, 0];
+    player1Matches = [];
+    player2Matches = [];
+    player1Collected.style.minHeight = "30px";
+    player2Collected.style.minHeight = "30px";
+    setTimeout(startGame, 1000);
+  }
+
+  window.onload = startGame;
+</script>
+</body>
+</html>
