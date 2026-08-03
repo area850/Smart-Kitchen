@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neuova Cafe - Sign Up</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #5a2c0c;
+      --secondary: #c49b63;
+      --accent: #e8c07d;
+      --light: #fff8f0;
+      --dark: #2a1806;
+      --cream: #f9f1e6;
+    }
+
+    body {
+      background: url('https://images.unsplash.com/photo-1445116572660-236099ec97a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;   /* ✅ Center horizontally */
+      align-items: center;       /* ✅ Center vertically */
+      overflow: hidden;
+      position: relative;
+      margin: 0;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(90, 44, 12, 0.6);
+      z-index: 0;
+    }
+
+    .signup-container {
+    max-width: 500px;       /* slightly narrower */
+    width: 100%;
+    padding: 2rem 2rem;     /* reduce padding */
+    background: rgba(255, 248, 240, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+.form-control,
+.input-box select.department {
+    padding: 0.6rem 1rem;   /* slightly smaller */
+    font-size: 0.95rem;     /* smaller font */
+}
+
+
+    .signup-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .signup-header img {
+      height: 80px;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.2));
+    }
+
+    .signup-header h2 {
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      font-family: 'Playfair Display', serif;
+      position: relative;
+      display: inline-block;
+    }
+
+    .signup-header h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px; left: 50%;
+      transform: translateX(-50%);
+      width: 80px; height: 3px;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
+    .signup-header p {
+      color: var(--secondary);
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
+    .form-control,
+    .input-box select.department {
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.3s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+      font-size: 1rem;
+      font-weight: 500;
+      color: #333;
+      width: 100%;
+    }
+
+    .form-control:focus,
+    .input-box select.department:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 0.25rem rgba(200, 160, 100, 0.25);
+      background: #fff;
+    }
+
+    .input-box select.department {
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 16px;
+    }
+
+    .btn-signup {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+      color: white;
+      padding: 0.75rem;
+      border-radius: 12px;
+      font-weight: 600;
+      width: 100%;
+      border: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(90, 44, 12, 0.3);
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-signup:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 44, 12, 0.4);
+    }
+
+    @keyframes floating {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="signup-container">
+    <div class="signup-header">
+      <img src="https://cdn-icons-png.flaticon.com/512/686/686458.png" alt="Neuova Cafe Logo">
+      <h2>Join Neuova Cafe</h2>
+      <p>Create your account to get started</p>
+    </div>
+
+    <form method="POST" action="sign_up.php" id="signupForm" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+        <small class="text-muted">Letters, numbers, and underscores only</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <div class="password-input-group">
+          <input type="password" class="form-control" id="password" name="password" required>
+          <i class="toggle-password fas fa-eye" onclick="togglePassword('password')"></i>
+        </div>
+        <small class="text-muted">Minimum 8 characters</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="confirm_password" class="form-label">Confirm Password</label>
+        <div class="password-input-group">
+          <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+          <i class="toggle-password fas fa-eye" onclick="togglePassword('confirm_password')"></i>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="department" class="form-label">Department</label>
+        <div class="input-box">
+          <select class="department" name="department" id="department" required>
+            <option value="">Select a department</option>
+            <option value="casher1">Casher 1</option>
+            <option value="casher2">Casher 2</option>
+            <option value="order">Order</option>
+            <option value="barrista">Barrista</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-signup">
+        <i class="fas fa-user-plus me-2"></i> Create Account
+      </button>
+    </form>
+
+    <div class="signup-footer text-center mt-3">
+      Already have an account? <a href="login.php">Login here</a>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(fieldId) {
+      const passwordField = document.getElementById(fieldId);
+      const toggleIcon = document.querySelector(`#${fieldId} + .toggle-password`);
+      if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+      }
+    }
+  </script>
+
+</body>
+</html>
