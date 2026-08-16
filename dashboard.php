@@ -21,9 +21,8 @@ if ($conn->connect_error) {
 }
 $conn->set_charset("utf8mb4");
 
-// =============================================
 // SYSTEM INITIALIZATION
-// =============================================
+
 $system_config = [
     'upload' => [
         'dir' => 'uploads/',
