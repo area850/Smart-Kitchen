@@ -85,9 +85,8 @@ $conn->query("CREATE TABLE IF NOT EXISTS finance_orders (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-// =============================================
 // REQUEST HANDLING
-// =============================================
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle menu item updates
     if (isset($_POST['update_id'])) {
