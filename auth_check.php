@@ -7,5 +7,4 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit();
 }
 
-// You can add more security checks here if need
 ?>
