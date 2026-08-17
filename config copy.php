@@ -40,7 +40,7 @@ try {
     die("Database connection failed. Please try again later.");
 }
 
-// Create uploads directory if it doesn't exist
+// Create uploads directory if it doesn't exist?
 if (!file_exists('uploads')) {
     mkdir('uploads', 0777, true);
 }
