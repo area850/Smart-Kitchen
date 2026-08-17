@@ -619,7 +619,7 @@ $conn->close();
             }, 500);
         });
 
-        // Optional: Theme toggle functionality
+        // Optional: Theme toggle functionality 
         const themeToggle = document.querySelector('.theme-toggle');
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark-theme');
