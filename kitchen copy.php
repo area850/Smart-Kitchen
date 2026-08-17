@@ -5,7 +5,6 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Handle AJAX POST request
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ajax']) && isset($_POST['order_id'])) {
     $order_id = intval($_POST['order_id']);
     $sql = "UPDATE orders SET status='ready' WHERE id=$order_id";
